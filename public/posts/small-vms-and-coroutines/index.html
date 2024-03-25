@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+        <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+
+        
+        
+        
+
+        
+
+        
+
+        
+
+        
+        
+        
+
+        <title>Small VMs &amp; Coroutines</title>
+        
+        <meta name="title" content="Small VMs &amp; Coroutines">
+        
+        
+        <meta name="generator" content="Zola v0.16.1">
+
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://blog.dziban.net/posts/small-vms-and-coroutines/">
+        <meta property="og:site_name" content="">
+        <meta property="og:title" content="Small VMs &amp; Coroutines">
+        
+        
+
+        
+        
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://blog.dziban.net/posts/small-vms-and-coroutines/">
+        <meta property="twitter:title" content="Small VMs &amp; Coroutines">
+        
+        
+        
+        
+        <link rel="canonical" href="https://blog.dziban.net/posts/small-vms-and-coroutines/">
+        
+        <script type="application/ld+json">
+            {
+                
+                "url":"https://blog.dziban.net/posts/small-vms-and-coroutines/",
+                "@type":"WebSite",
+                "headline":"Small VMs & Coroutines",
+                "name":"Small VMs & Coroutines",
+                
+                "@context":"https://schema.org"
+            }
+        </script>
+        
+        
+        
+        <link rel="stylesheet" href="https://blog.dziban.net/style.css"/>
+        
+    </head>
+    <body theme="auto">
+        <div class="w">
+            <header>
+                
+                <nav>
+                    
+                    <a href="/" >~home</a>
+                    
+                </nav>
+                
+                
+<p><a href="..">..</a>/small-vms-and-coroutines</p>
+<p class="post-meta"><time datetime="2023-01-17">2023-01-17</time></p>
+<h1>Small VMs &amp; Coroutines</h1>
+
+            </header>
+            <main class="page-content" aria-label="Content">
+                
+
+
+
+<h1 id="tl-mdwr">TL;MDWR</h1>
+<p>In this post I'll talk about the implementation of the coroutine system in x64 asm for a game I'm writing.</p>
+<p>(Disclaimer: I'm very new at x64 assembly programming, so I may be doing some very stupid things)</p>
+<h1 id="background">Background</h1>
+<p>I've had this idea for a while of a programmable game. I'm not gonna go into details for now but the main idea
+is a Real-time strategy game (RTS) where you can program every unit. The code of the units runs in a very simple 
+fantasy stack virtual machine, and every tick each unit gets to execute a certain amount of instructions<br />
+based on their virtual CPU speed.</p>
+<p>As this is an RTS, lots of units are running at the same time and so we need a way to efficiently run all of these
+units at a speed reasonable for an interactive videogame (60fps). Some years ago I did some tests around this idea and the VMs 
+I came up with were underperforming messes of either rust or C. There was no way I could deliver the performance I 
+had in mind with that.</p>
+<p>Recently while reading the first volume of <a href="https://www-cs-faculty.stanford.edu/~knuth/taocp.html">The Art of Computer Programming</a> 
+I came across a section when Knuth implements coroutines in his MIX machine. And, while I had heard and used 
+coroutines informaly all the time in my career I had never seen it like this. For those who don't know, a coroutine
+is a kind of subroutine that can be suspended and resumed, they are like concurrent-less threads. Each coroutine
+has it's own stack and instruction pointer. You may have encountered asymmetrical coroutines in the form of python 
+generators for example. If you need more context please check the <a href="https://en.wikipedia.org/wiki/Coroutine">coroutine page at wikipedia</a></p>
+<p>So I had two ideas at about the same time, convert the code of the Fantasy VM to x64 asm code and run to the code for the
+unit VMs as tiny individual coroutines. This both avoids expensive thread context switches, and completely removes the need for
+coordinating. I still have to run some benchmarks but I believe splitting the VMs by power (lots of small units in a thread,
+some powerful units in another) may bring the best performance results. I may create a separate blogpost once I benchmark this
+properly.</p>
+<p>So let's get started!</p>
+<h1 id="fantasy-asm-to-x64-asm">Fantasy ASM to x64 ASM</h1>
+<p>The first one seems very obvious in hindsight, why spend time implementing the VM when the CPU it is running on already
+implements most of the things I want? With some simple macros I can even mostly feed the Fantasy ISA program into an assembler and it
+will come out as expected.</p>
+<p>Let's work with a very reduced version of the VM instruction set, just three simple instructions:</p>
+<table><thead><tr><th>Instr</th><th>Description</th></tr></thead><tbody>
+<tr><td>PUSH</td><td>Push immediate to stack</td></tr>
+<tr><td>ADD</td><td>Add the top two items of the stack. Place result on stack</td></tr>
+<tr><td>JMP</td><td>Jump to label</td></tr>
+</tbody></table>
+<p>Let's create a very dumb program with this:</p>
+<pre data-lang="ASM" style="background-color:#fefbec;color:#6e6b5e;" class="language-ASM "><code class="language-ASM" data-lang="ASM"><span style="color:#6684e1;">_co_start:
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">PUSH </span><span style="color:#b65611;">0x01
+</span><span style="color:#b854d4;">loop</span><span style="color:#6684e1;">:
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">PUSH </span><span style="color:#b65611;">0x01
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">ADD
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">JMP loop
+</span></code></pre>
+<p>It basically adds <code>0x01</code> constantly to a value on the stack, forever. It's an infinite loop.</p>
+<p>Now we can use an assembler with macro support to implement these operations in x64. I'll be using <a href="https://flatassembler.net/">fasm</a> for this.</p>
+<pre data-lang="asm" style="background-color:#fefbec;color:#6e6b5e;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#6684e1;">macro </span><span style="color:#b854d4;">JMP </span><span style="color:#6684e1;">target {
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">jmp </span><span style="color:#6684e1;">target
+</span><span style="color:#6684e1;">}
+</span><span>
+</span><span style="color:#6684e1;">macro </span><span style="color:#b854d4;">ADD </span><span style="color:#6684e1;">{
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">pop </span><span style="color:#1fad83;">WORD </span><span style="color:#d73737;">bx
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">add </span><span style="color:#1fad83;">WORD </span><span>[</span><span style="color:#d73737;">rsp</span><span>], </span><span style="color:#d73737;">bx
+</span><span style="color:#6684e1;">}
+</span><span>
+</span><span style="color:#6684e1;">macro </span><span style="color:#b854d4;">PUSH </span><span style="color:#6684e1;">number {
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">push </span><span style="color:#1fad83;">WORD </span><span style="color:#6684e1;">number
+</span><span style="color:#6684e1;">}
+</span></code></pre>
+<p>Several things to note, I'm using <code>inc rax</code> in every instruction because I want a way to know how many virtual instructions have executed in order
+to impose limits on number of instructions per tick. <code>rax</code> holds this counter. <code>JMP</code> and <code>PUSH</code> are exactly the same instruction as the x64 counterpart, they map 1 to 1. 
+<code>ADD</code> is very simple as well: use <code>bx</code> as a temporary storage for the top value of the stack, add the top value of the stack with <code>bx</code> and store in 
+back to the top of the stack.</p>
+<p>With these macros in place, passing the Fantasy ISA input to fasm already gives us a valid x64 program. The result of the macro expansion would look
+like this:</p>
+<pre data-lang="asm" style="background-color:#fefbec;color:#6e6b5e;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#6684e1;">_co_start:
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">push </span><span style="color:#1fad83;">WORD </span><span style="color:#b65611;">0x01
+</span><span style="color:#b854d4;">loop</span><span style="color:#6684e1;">:
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">push </span><span style="color:#1fad83;">WORD </span><span style="color:#b65611;">0x01
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">pop </span><span style="color:#1fad83;">WORD </span><span style="color:#d73737;">bx
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">add </span><span style="color:#1fad83;">WORD </span><span>[</span><span style="color:#d73737;">rsp</span><span>], </span><span style="color:#d73737;">bx
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">jmp </span><span style="color:#6684e1;">target
+</span></code></pre>
+<p>In very few lines we have an assembler for our fantasy VM to native x64 code! Now, currently this will loop forever and we don't want that, this is where
+coroutines come and save the day.</p>
+<h1 id="coroutines">Coroutines</h1>
+<p>How do we make sure that the unit vm only executes N instructions before it suspends itself? A pretty lightweight solution that requires very little setup
+is to insert a check that we haven't exceeded the number of operations every <code>K</code> ops and after every label (in the unit VM you can only jump to labels, 
+so we catch all loops, branches and sketchy stuff with this).</p>
+<blockquote>
+<p>I know that this doesn't ensure that the VMs execute exactly N operations, but I think it is a pretty good tradeoff between code size, execution
+overhead and constraining the number of ops. I'll show one possible mitigation further down.</p>
+</blockquote>
+<p>So how do we implement these lightweight unit coroutines?</p>
+<p>First we need to save several things per coroutine:</p>
+<ul>
+<li>current stack pointer (<code>rsp</code>)</li>
+<li>current instruction pointer (<code>rip</code>)</li>
+<li>current <code>rax</code> where we save the amount of instructions executed</li>
+<li>current <code>rbx</code> that is used for some temporal values, this one is not strictly needed and there is a chance I remove it in the future</li>
+</ul>
+<p>Usually these things are saved in the stack with normal coroutines but we don't want to taint the stack of the unit vms with unrelated data.
+First because that means their stack gets reduced for reasons unrelated to their code, second because they may be able to manipulate the stack
+to the point where they override the values, and then all hell breaks loose. </p>
+<p>Let's start with a simple example where we have 10 units, so let's allocate 40 (4 fields * 10 coroutines) 64-bit values and 800 bytes of 
+total stack (80 per coroutine).</p>
+<pre data-lang="asm" style="background-color:#fefbec;color:#6e6b5e;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#999580;">; co-routine data, 40 quad-word sized (8 bytes), zeroed buffer
+</span><span style="color:#6684e1;">_co_data:	</span><span style="color:#1fad83;">dq </span><span style="color:#b65611;">40 </span><span style="color:#6684e1;">dup </span><span style="color:#b65611;">0
+</span><span>
+</span><span style="color:#6684e1;">data_stack:
+</span><span style="color:#999580;">	; Allocate 400 word sized (2 bytes), zeroed buffer
+</span><span style="color:#6684e1;">	</span><span style="color:#1fad83;">dw </span><span style="color:#b65611;">400 </span><span style="color:#6684e1;">dup </span><span style="color:#b65611;">0
+</span><span style="color:#6684e1;">end_data_stack:
+</span></code></pre>
+<p>and initialize the data in them:</p>
+<pre data-lang="asm" style="background-color:#fefbec;color:#6e6b5e;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#6684e1;">_start:</span><span style="color:#999580;">         ; Main VM start
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">xor </span><span style="color:#d73737;">rax</span><span>, </span><span style="color:#d73737;">rax</span><span style="color:#999580;">                ; Initialize rax to 0
+</span><span style="color:#999580;">	; Set rdx to the end of the stack, we will use this to 
+</span><span style="color:#999580;">	; assign stacks to each coroutine, we start from the end
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">mov </span><span style="color:#d73737;">rdx</span><span>, </span><span style="color:#6684e1;">end_data_stack     
+</span><span style="color:#999580;">	; rcx will be the moving pointer through the _co_data 
+</span><span style="color:#999580;">	; structure as we save the data
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">mov </span><span style="color:#d73737;">rcx</span><span>, </span><span style="color:#6684e1;">_co_data           
+</span><span style="color:#999580;">	; Loop over all 10 coroutines to...
+</span><span style="color:#6684e1;">init_co_loop:
+</span><span style="color:#999580;">	; Initialize the rsp
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">mov </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx</span><span>], </span><span style="color:#d73737;">rdx
+</span><span style="color:#999580;">	; Initialize the rip
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">mov </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx </span><span>+ </span><span style="color:#b65611;">24</span><span>], </span><span style="color:#6684e1;">_co_start
+</span><span style="color:#999580;">	; Move to the next structure in _co_data
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">add </span><span style="color:#d73737;">rcx</span><span>, </span><span style="color:#b65611;">32
+</span><span style="color:#999580;">	; Move back to the next coroutine start of the stack
+</span><span style="color:#999580;">	; Each coroutine in this example gets 80 bytes
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">sub </span><span style="color:#d73737;">rdx</span><span>, </span><span style="color:#b65611;">80
+</span><span style="color:#999580;">	; Loop stuff
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">cmp </span><span style="color:#d73737;">rax</span><span>, </span><span style="color:#b65611;">10
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">jl </span><span style="color:#6684e1;">init_co_loop
+</span></code></pre>
+<p>Now let's loop over the coroutines, when we <code>yield</code> to the first one we will wait until it <code>yield</code>s control back to the main loop, then it will
+continue on to the second, and so on. While you read the next code fragment, always keep in mind that all across the execution <em><code>rcx</code> always points to the
+currently active coroutine data.</em> </p>
+<pre data-lang="asm" style="background-color:#fefbec;color:#6e6b5e;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#6684e1;">co_initialized:
+</span><span style="color:#999580;">	; i = 0
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">xor </span><span style="color:#d73737;">rax</span><span>, </span><span style="color:#d73737;">rax
+</span><span style="color:#999580;">	; we will start with the first co-routine
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">mov </span><span style="color:#1fad83;">QWORD </span><span style="color:#d73737;">rcx</span><span>, </span><span style="color:#6684e1;">_co_data
+</span><span style="color:#6684e1;">_loop:
+</span><span style="color:#999580;">	; yield to the coroutine
+</span><span style="color:#6684e1;">	YIELD
+</span><span style="color:#999580;">	; i += 1
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">inc </span><span style="color:#d73737;">rax
+</span><span style="color:#999580;">	; move onto the next coroutine
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">add </span><span style="color:#d73737;">rcx</span><span>, </span><span style="color:#b65611;">32
+</span><span style="color:#999580;">	; Loop things
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">cmp </span><span style="color:#d73737;">rax</span><span>, </span><span style="color:#b65611;">10
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">jl </span><span style="color:#6684e1;">_loop
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">jmp </span><span style="color:#6684e1;">_exit
+</span></code></pre>
+<p>Now all the magic seems to happen in this <code>YIELD</code> macro, let's take a look:</p>
+<pre data-lang="asm" style="background-color:#fefbec;color:#6e6b5e;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#6684e1;">macro YIELD reset_rax {
+</span><span style="color:#999580;">	; local turns these labels into local labels, so multiple uses of
+</span><span style="color:#999580;">	; YIELD don&#39;t create repeated labels.
+</span><span style="color:#6684e1;">	local next_inst</span><span>, </span><span style="color:#6684e1;">after_yield
+</span><span style="color:#999580;">	; swap rsp, by the stored value in rsp (this means we just saved
+</span><span style="color:#999580;">	; the value of the main program rsp to the co_data structure pointed
+</span><span style="color:#999580;">	; by rcx)
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">xchg </span><span style="color:#d73737;">rsp</span><span>, </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx</span><span>]
+</span><span style="color:#999580;">	; swap rax, same as above
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">xchg </span><span style="color:#d73737;">rax</span><span>, </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx </span><span>+ </span><span style="color:#b65611;">8</span><span>]
+</span><span style="color:#999580;">	; swap rbx, same as above
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">xchg </span><span style="color:#d73737;">rbx</span><span>, </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx </span><span>+ </span><span style="color:#b65611;">16</span><span>]
+</span><span style="color:#999580;">	; now we push onto the stack the instruction pointer for the coroutine
+</span><span style="color:#999580;">	; which will be used by the &quot;ret&quot; instruction further down
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">push </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx </span><span>+ </span><span style="color:#b65611;">24</span><span>]	
+</span><span style="color:#999580;">	; we call next_inst to get the instruction pointer of this coroutine.
+</span><span style="color:#999580;">	; We don&#39;t wanna return to the next &quot;pop&quot; so we will need to increment
+</span><span style="color:#999580;">	; this value so that a yield to this coroutine returns right after the
+</span><span style="color:#999580;">	; &quot;ret&quot;. The call will put this rip into the stack
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">call </span><span style="color:#6684e1;">next_inst
+</span><span style="color:#6684e1;">next_inst:
+</span><span style="color:#999580;">	; move the just save rip into the rip of the _co_data[coroutine_id]
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">pop </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx </span><span>+ </span><span style="color:#b65611;">24</span><span>]
+</span><span style="color:#999580;">	; increment it so a yield from the other coroutine continues from right
+</span><span style="color:#999580;">	; after the ret
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">add </span><span style="color:#1fad83;">QWORD </span><span>[</span><span style="color:#d73737;">rcx </span><span>+ </span><span style="color:#b65611;">24</span><span>], </span><span style="color:#6684e1;">(after_yield </span><span>- </span><span style="color:#6684e1;">next_inst)
+</span><span style="color:#999580;">	; jump, using the value pushed 4 instructions above, into the coroutine
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">ret
+</span><span style="color:#6684e1;">after_yield:
+</span><span style="color:#6684e1;">}
+</span></code></pre>
+<p>There are probably some better ways to implement this, but this is what I came up with. Each call into a coroutine saves the main coroutine state
+into the <code>_co_data</code> of the coroutine you <code>YIELD</code> into. Once <code>YIELD</code> is called from the other coroutine the same thing will happen, the values for 
+the main one will be restored and the execution will continue right after the <code>ret</code>. This works very well for our case of a main coroutine coordinating
+other coroutines.</p>
+<p>There is one last piece left, injecting some instructions to check if we've exhausted our instruction limit this tick. To do so I created this macro:</p>
+<pre data-lang="asm" style="background-color:#fefbec;color:#6e6b5e;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#6684e1;">macro CHECK_LIMITS {
+</span><span style="color:#6684e1;">	local no_yield
+</span><span style="color:#999580;">	; in this case the 15k instruction limit is hardcoded, it could
+</span><span style="color:#999580;">	; be passed as an argument to the macro as when you generate the
+</span><span style="color:#999580;">	; code, you can set a limit per unit depending on their virtual cpu
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">cmp </span><span style="color:#d73737;">rax</span><span>, </span><span style="color:#b65611;">15000		
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">jl </span><span style="color:#6684e1;">no_yield
+</span><span style="color:#999580;">	; If we are above, YIELD
+</span><span style="color:#6684e1;">	YIELD 
+</span><span style="color:#999580;">	; Initialize rax to 0 to reset the counter, here is where the mitigation
+</span><span style="color:#999580;">	; that I talked about before could happen, here you could subtract by 15k
+</span><span style="color:#999580;">	; and you&#39;d compensate going over the instruction limit last iteration
+</span><span style="color:#999580;">	; by having less instructions this loop. This is still not perfect but I
+</span><span style="color:#999580;">	; think it&#39;s mostly fine. If people found a way to exploit this, I&#39;d
+</span><span style="color:#999580;">	; be happy to let them.
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">xor </span><span style="color:#d73737;">rax</span><span>, </span><span style="color:#d73737;">rax
+</span><span style="color:#6684e1;">no_yield:
+</span><span style="color:#6684e1;">}
+</span></code></pre>
+<p>and we can modify the original program like so:</p>
+<pre data-lang="ASM" style="background-color:#fefbec;color:#6e6b5e;" class="language-ASM "><code class="language-ASM" data-lang="ASM"><span style="color:#6684e1;">_co_start:
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">PUSH </span><span style="color:#b65611;">0x01
+</span><span style="color:#b854d4;">loop</span><span style="color:#6684e1;">:
+</span><span style="color:#999580;">	; On every loop start, check if we&#39;ve exceeded the max
+</span><span style="color:#6684e1;">	CHECK_LIMITS
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">PUSH </span><span style="color:#b65611;">0x01
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">ADD
+</span><span style="color:#6684e1;">	</span><span style="color:#b854d4;">JMP loop
+</span></code></pre>
+<h1 id="some-small-notes">Some small notes</h1>
+<p>This coroutine implementation is very specific. For general purpose coroutines you'd have to save some more registers than <code>rip</code>, <code>rsp</code>, <code>rax</code> and <code>rbx</code>.
+This works in this case because I've assigned a very specific meaning to each register that works all across the implementation, this allows for a smaller
+and faster switching between coroutines than a general version.</p>
+<p>Another thing is that right now this is very static, but I think it's fairly simple to see how to make it dynamic on the number of coroutines and having
+different starting labels for each coroutine.</p>
+<p>Right now with the implementation I've shown there is no stack security to simplify the idea, but of course the <code>PUSH</code> and <code>POP</code> instructions should have
+boundary checks.</p>
+<p>Another point is that the <code>inc rax</code> for every operation may add too much overhead, another option that I need to explore is adding an <code>add rax, &lt;immediate&gt;</code>
+right before any jump operation. I believe this should be enough to reduce the overhead and it should cover all cases but I need to investigate further.</p>
+<h1 id="the-end">The End</h1>
+<p>Hope this was informative and clear, if you have any question or you wanna talk, please let me know at <code>marce [at] dziban.net</code>.</p>
+
+
+            </main>
+            <footer>
+                
+<p class="taxonomies">
+
+</p>
+
+                
+            </footer>
+        </div>
+    </body>
+</html>
+        
