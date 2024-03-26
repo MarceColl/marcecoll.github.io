@@ -25,6 +25,8 @@ author = "Marce Coll"
 logo = "images/logo.png"
 header_nav = [
   { name = "~home", url = "/" },
+  { name = "*essays", url = "/essays/" },
+  { name = "@posts", url = "/posts/" },
 ]
 
 add_toc = true
