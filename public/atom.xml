@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title></title>
+    <link rel="self" type="application/atom+xml" href="https://blog.dziban.net/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://blog.dziban.net"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2024-03-26T00:00:00+00:00</updated>
+    <id>https://blog.dziban.net/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Explorative Programming</title>
+        <published>2024-03-26T00:00:00+00:00</published>
+        <updated>2024-03-26T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.dziban.net/essays/explorative-programming/"/>
+        <id>https://blog.dziban.net/essays/explorative-programming/</id>
+        
+        <content type="html" xml:base="https://blog.dziban.net/essays/explorative-programming/">&lt;p&gt;I am very bad at planning and visualizing what a program should look
+before I start writing it. I&#x27;m sure a lot of other developers are in
+that boat as well. I&#x27;d even venture to say that (almost?) all
+developers have a hard time doing that even if they think they
+understand the problem. Well, that&#x27;s probably actually the root of the
+issue. Without writing or tackling them, it&#x27;s hard to understand
+problems. You can only reach so far by thinking very hard in
+isolation.&lt;&#x2F;p&gt;
+&lt;p&gt;In my case the only real way I can tackle a problem is to start
+writing code and playing with the problem and its data. I can talk
+about how I approach the process at another time, but I need to explore
+the problem space to find its limits, its edge cases, what areas are well
+lit and which are in shadows. I cannot think of this in the abstract.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;I think I&#x27;m not alone in this. Hopefully?&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The problem is that most development environments are not designed to
+help with the exploratory nature of this way of mapping a problem
+space. They seem to be designed around what the end-program needs to
+look like. Well-structured files in clean hierarchies and packaged
+within cleanly delimited interfaces and modules. Who can write those
+from the start? My guess is no-one.&lt;&#x2F;p&gt;
+&lt;p&gt;There is a &lt;em&gt;rigidness&lt;&#x2F;em&gt; in our current development environments that
+makes this important first step a lot harder than it should be. This
+rigidness actively works against us, and prevents us from
+understanding problems.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rigidness&quot;&gt;Rigidness&lt;&#x2F;h2&gt;
+&lt;p&gt;What are the sources of this rigidness? I believe there are several and this
+is not a exhaustive list, just the ones that I find most annoying and the ones
+I&#x27;ve been looking for solutions for.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Long feedback cycles&lt;&#x2F;strong&gt;, caused mainly by two things:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Build steps&lt;&#x2F;strong&gt;, if you need to recompile or rebuild the system,
+it incurs a cost everytime you try something new.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Loss of program state&lt;&#x2F;strong&gt;, even if your language doesn&#x27;t need a
+build step, most languages are not designed to keep your program
+state evolving as you evolve the code and their data structures.
+This is a huge source of friction, and it&#x27;s a huge cost to pay
+every time you wanna try something new.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;File based organization&lt;&#x2F;strong&gt;, right from the start you need to start
+deciding what goes where. Of course I think most of us start with a
+single file, full of random functions and tests. But at some point
+this file becomes unbearable, impossible to find what you are
+looking for. At that point you have to make decisions and start
+splitting the file at logical points. Deal with what is private and
+what is not. It may not seem like much, but it&#x27;s very annoying.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Bad system introspection&lt;&#x2F;strong&gt;, most languages require you to
+implement text-based outputs for your internal data so you can
+actually inspect what is going on.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Bad solutions for tree-based exploration&lt;&#x2F;strong&gt;, there are usually
+several directions that look good when tackling a problem and once
+you decide on one of them it&#x27;s very costly to try the rest. The
+version control systems we have are not designed for this kind of
+work, they require the user to create snapshots when the user
+wants. If they have forgotten to do it at some point, that snapshot
+is lost. And I can just speak for my experience here, but while I&#x27;m
+doing this exploratory work I never know what I wanna save and what
+not and what avenue will be worth exploring. I don&#x27;t wanna be
+thinking about any of that either.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Bad Collaboration Story&lt;&#x2F;strong&gt;, the same systems I talk about in the
+last point are also the way we do collaboration in software
+development right now, tools like &lt;code&gt;git&lt;&#x2F;code&gt; or &lt;code&gt;mercurial&lt;&#x2F;code&gt;. If they are
+a failure for tree-based exploration, then they cannot work to
+collaborate on exploration. They are already lacking the needed
+info for collaborating.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;This rigidness is creatin so much friction when it comes to tackling
+new and complex problems, both alone and in small teams. It requires
+so much upfront investment that I think we are missing out on a lot of
+new and interesting ideas because it&#x27;s costly to do so.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;If we had better exploratory programming tooling we could tackle
+more complex problems with less people&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;There you go, that&#x27;s my thesis. We need to have better, interactive,
+exploratory and &lt;em&gt;playful&lt;&#x2F;em&gt; development environments.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;a-step-in-this-direction&quot;&gt;A step in this direction&lt;&#x2F;h2&gt;
+&lt;p&gt;Recently I&#x27;ve been spending more and more time writing Common Lisp
+after years of writing Python, Rust, C and Javascript&#x2F;Typescript.  And
+it&#x27;s not only because of things like macros and definitely not because
+of the ecosystem. It&#x27;s because it&#x27;s the environment that more closely
+matches my development process. The feedback cycle is immediate, it
+allows very good introspection of every object in the system, and it
+makes a lot of effort to keep your program state after changing
+anything&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The amazing thing about Common Lisp as a development environment is
+that it covers the whole range, from exploring to production. It
+covers the high level, live reloading, macro writing, interactive side
+and the performance-oriented, debugging, fast, robust side that you
+want in order to deploy your systems.&lt;&#x2F;p&gt;
+&lt;p&gt;It still requires you to use files, working in the REPL-only brings
+its own set of problems. REPL and files are hard to keep in
+sync. That&#x27;s another thing that what I&#x27;m development helps with, if
+you remove the files, there&#x27;s nothing to keep in sync.&lt;&#x2F;p&gt;
+&lt;p&gt;And it offers no help for the last two points&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; I made above.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;an-idea-for-what-comes-next&quot;&gt;An idea for what comes next&lt;&#x2F;h2&gt;
+&lt;p&gt;I&#x27;ve started work on an alternative system. It&#x27;s not currently in a
+usable state but it&#x27;s in a working state and I&#x27;m fairly close to
+dogfooding it.&lt;&#x2F;p&gt;
+&lt;p&gt;I&#x27;ve decided to use Common Lisp as a base language for this
+development environment. I didn&#x27;t want to have to create a whole
+language from scratch to test out these ideas, I tend to get into
+useless rabbitholes that detract from what I&#x27;m trying to do, not this
+time. Common Lisp as I said already has what I consider to be the
+local maxima for my workflow and has the tools to extend the language
+in the direction I want. It&#x27;s the perfect testing grounds.&lt;&#x2F;p&gt;
+&lt;p&gt;There are two features I&#x27;m starting with in this system:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Non-linear editing of the source&lt;&#x2F;strong&gt; Getting away from file based
+organization, you have a database of symbols and you can bring them
+and hide them as you please. There is a concept of a workspace,
+where you can see only the definitions for the symbols you need and
+nothing else. These workspaces can be saved and restored. That way
+you can have different &amp;quot;Notebooks&amp;quot;, depending on the problem you
+are solving, with only the definitions you need at any given time.
+This solves the code organization problem and reduces the friction
+of starting something.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Per-symbol history&lt;&#x2F;strong&gt;, we keep the history of every single version
+of functions, &lt;code&gt;defvar&lt;&#x2F;code&gt;, &lt;code&gt;defparameter&lt;&#x2F;code&gt;, &lt;code&gt;defclass&lt;&#x2F;code&gt;, &lt;code&gt;defmacro&lt;&#x2F;code&gt;, etc
+you have created and sent to the REPL. You can navigate the tree,
+inspect the history, go back in time. This tree is built
+automatically as you re-define any symbol. You can diff between
+different states and even merge versions. This works at per-symbol
+granularity. This attempts to solve point number 4. You can recurse
+into design sub-trees and go back in time without needing to manage
+history manually.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Currently all of this is implemented by having all symbols in an
+SQLite database and with a custom Emacs mode. You have a tree of
+definitions and we have mappings of &lt;code&gt;(package, symbol) -&amp;gt; definition&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Common Lisp makes this extremely easy, packages are nothing more than
+a bag of symbols, some public, some private and there are objects
+assigned to symbols. So we are working on the same package abstraction
+that common lisp is already based on. Backed by a DB instead of
+in-memory in the Lisp listener. We don&#x27;t even lose performance since
+Common Lisp exposes the &lt;code&gt;compile&lt;&#x2F;code&gt; function to compile lambda forms.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;collaborative-explorative-programming&quot;&gt;Collaborative Explorative Programming&lt;&#x2F;h3&gt;
+&lt;p&gt;Expanding this idea a bit more, and to tackle point #5 we could
+replace the SQLite with a shared database. Instead of having one set
+of mappings you could have one per user while having a shared history.&lt;&#x2F;p&gt;
+&lt;p&gt;In order to do this having ways to delete, merge and search the
+history database would become needed since the amount of code could
+get unwieldy pretty fast. One interesting thing we could do to search
+for valid history entries is to be able to create tests for a symbol,
+locally but shareable and to be able to run those tests on all&#x2F;some
+history entries. You could then see which ones match your
+specification or for which tests it fails. It could help narrow down
+what parts of the tree were valid and which not. With this you could
+even dynamically query the history tree by creating ad-hoc predicates
+over inputs and outputs of the functions.&lt;&#x2F;p&gt;
+&lt;p&gt;Other interesting ways of developing in groups withh this could be to
+allow you to live-track the dev env of another user. Following the
+same set of symbol mappings, you could even limit it to certain
+functions or function trees (if we kept track of which functions
+depend on which functions). That way your friend could be working on
+function A while your work on function B and you both have constantly
+updated versions of each others functions while you work on yours.&lt;&#x2F;p&gt;
+&lt;p&gt;This is not implemented for now, but it would be a natural
+extension to the system.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;live-deploy&quot;&gt;Live deploy&lt;&#x2F;h3&gt;
+&lt;p&gt;Another interesting thing that we could develop is the ability to
+deploy code on a live instance in a way that automatically rolls back
+if too many errors happen.&lt;&#x2F;p&gt;
+&lt;p&gt;This maybe is too crazy, since there is a reason why we&#x27;ve converged
+into deploying dumb stateless services in docker images. We don&#x27;t wanna
+deal with a changing environment. But, is it really that different?&lt;&#x2F;p&gt;
+&lt;p&gt;Imagine a service that never stops, you diff the existing functions
+with the new functions, only updating what needs to be updated. If
+there is a change in the rate of errors then you automatically
+rollback the deployed functions.  A smarter system could even track
+which functions changed their error rate and only rollback any
+function that is related in that execution tree that changed in the
+last deploy.&lt;&#x2F;p&gt;
+&lt;p&gt;It gets harder to track, but maybe it&#x27;s possible.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;concerns-and-worries&quot;&gt;Concerns and worries&lt;&#x2F;h2&gt;
+&lt;p&gt;I have two main worries and areas of the system that I&#x27;m unsure how I&#x27;ll tackle:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;How to interact&#x2F;merge this methodology in existing systems that are
+file based in a way that doesn&#x27;t add a lot of friction back.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;At the top-level of any common lisp program there may be
+expressions not associated with a symbol. I&#x27;m very unsure how to
+tackle that if at all. I tend to always wrap everything in
+functions anyway, but I don&#x27;t want to impose a particular way of
+programming if you wanna use the tool. I need to give this more thought.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;And the final worry, which I think a lot of us have when tackling a
+new design space:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Why hasn&#x27;t been done yet before? Is it a bad idea? Does it have
+hidden complexities that make it impractical? Do people not develop
+like this? Will the idea not be as useful as I expect?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I guess there is only one way to know :)&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h2&gt;
+&lt;p&gt;This is a topic very dear to my heart, it has taken me many years to
+come to understand how I best develop software. I&#x27;m not a very
+introspective person in general and it has been a long journey.&lt;&#x2F;p&gt;
+&lt;p&gt;Hopefuly some of it was interesting and I look forward to learn more
+about if these ideas resonate with you and what the problems may be.&lt;&#x2F;p&gt;
+&lt;p&gt;I will write another post at some point to show how all this works
+from within. It is actually surprisingly small because of the amount
+of tools that CL gives the user, but there are some interesting
+challenges nontheless.&lt;&#x2F;p&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;CLOS evolves the instances of any class you define as you evolve the class definition&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;I guess you could have two people remotely controlling the same
+repl through swank, but that would get unwieldy quickly&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Small VMs &amp; Coroutines</title>
+        <published>2023-01-17T00:00:00+00:00</published>
+        <updated>2023-01-17T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.dziban.net/posts/small-vms-and-coroutines/"/>
+        <id>https://blog.dziban.net/posts/small-vms-and-coroutines/</id>
+        
+        <content type="html" xml:base="https://blog.dziban.net/posts/small-vms-and-coroutines/">&lt;h1 id=&quot;tl-mdwr&quot;&gt;TL;MDWR&lt;&#x2F;h1&gt;
+&lt;p&gt;In this post I&#x27;ll talk about the implementation of the coroutine system in x64 asm for a game I&#x27;m writing.&lt;&#x2F;p&gt;
+&lt;p&gt;(Disclaimer: I&#x27;m very new at x64 assembly programming, so I may be doing some very stupid things)&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;background&quot;&gt;Background&lt;&#x2F;h1&gt;
+&lt;p&gt;I&#x27;ve had this idea for a while of a programmable game. I&#x27;m not gonna go into details for now but the main idea
+is a Real-time strategy game (RTS) where you can program every unit. The code of the units runs in a very simple 
+fantasy stack virtual machine, and every tick each unit gets to execute a certain amount of instructions&lt;br &#x2F;&gt;
+based on their virtual CPU speed.&lt;&#x2F;p&gt;
+&lt;p&gt;As this is an RTS, lots of units are running at the same time and so we need a way to efficiently run all of these
+units at a speed reasonable for an interactive videogame (60fps). Some years ago I did some tests around this idea and the VMs 
+I came up with were underperforming messes of either rust or C. There was no way I could deliver the performance I 
+had in mind with that.&lt;&#x2F;p&gt;
+&lt;p&gt;Recently while reading the first volume of &lt;a href=&quot;https:&#x2F;&#x2F;www-cs-faculty.stanford.edu&#x2F;~knuth&#x2F;taocp.html&quot;&gt;The Art of Computer Programming&lt;&#x2F;a&gt; 
+I came across a section when Knuth implements coroutines in his MIX machine. And, while I had heard and used 
+coroutines informaly all the time in my career I had never seen it like this. For those who don&#x27;t know, a coroutine
+is a kind of subroutine that can be suspended and resumed, they are like concurrent-less threads. Each coroutine
+has it&#x27;s own stack and instruction pointer. You may have encountered asymmetrical coroutines in the form of python 
+generators for example. If you need more context please check the &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Coroutine&quot;&gt;coroutine page at wikipedia&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;So I had two ideas at about the same time, convert the code of the Fantasy VM to x64 asm code and run to the code for the
+unit VMs as tiny individual coroutines. This both avoids expensive thread context switches, and completely removes the need for
+coordinating. I still have to run some benchmarks but I believe splitting the VMs by power (lots of small units in a thread,
+some powerful units in another) may bring the best performance results. I may create a separate blogpost once I benchmark this
+properly.&lt;&#x2F;p&gt;
+&lt;p&gt;So let&#x27;s get started!&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;fantasy-asm-to-x64-asm&quot;&gt;Fantasy ASM to x64 ASM&lt;&#x2F;h1&gt;
+&lt;p&gt;The first one seems very obvious in hindsight, why spend time implementing the VM when the CPU it is running on already
+implements most of the things I want? With some simple macros I can even mostly feed the Fantasy ISA program into an assembler and it
+will come out as expected.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s work with a very reduced version of the VM instruction set, just three simple instructions:&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Instr&lt;&#x2F;th&gt;&lt;th&gt;Description&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;PUSH&lt;&#x2F;td&gt;&lt;td&gt;Push immediate to stack&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;ADD&lt;&#x2F;td&gt;&lt;td&gt;Add the top two items of the stack. Place result on stack&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;JMP&lt;&#x2F;td&gt;&lt;td&gt;Jump to label&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;p&gt;Let&#x27;s create a very dumb program with this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ASM&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-ASM &quot;&gt;&lt;code class=&quot;language-ASM&quot; data-lang=&quot;ASM&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_co_start:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;PUSH &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0x01
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;loop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;PUSH &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0x01
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;ADD
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;JMP loop
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It basically adds &lt;code&gt;0x01&lt;&#x2F;code&gt; constantly to a value on the stack, forever. It&#x27;s an infinite loop.&lt;&#x2F;p&gt;
+&lt;p&gt;Now we can use an assembler with macro support to implement these operations in x64. I&#x27;ll be using &lt;a href=&quot;https:&#x2F;&#x2F;flatassembler.net&#x2F;&quot;&gt;fasm&lt;&#x2F;a&gt; for this.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;asm&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-asm &quot;&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;macro &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;JMP &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;target {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;jmp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;target
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;macro &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;ADD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;{
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;pop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;WORD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;bx
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;add &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;WORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rsp&lt;&#x2F;span&gt;&lt;span&gt;], &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;bx
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;macro &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;PUSH &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;number {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;push &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;WORD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;number
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Several things to note, I&#x27;m using &lt;code&gt;inc rax&lt;&#x2F;code&gt; in every instruction because I want a way to know how many virtual instructions have executed in order
+to impose limits on number of instructions per tick. &lt;code&gt;rax&lt;&#x2F;code&gt; holds this counter. &lt;code&gt;JMP&lt;&#x2F;code&gt; and &lt;code&gt;PUSH&lt;&#x2F;code&gt; are exactly the same instruction as the x64 counterpart, they map 1 to 1. 
+&lt;code&gt;ADD&lt;&#x2F;code&gt; is very simple as well: use &lt;code&gt;bx&lt;&#x2F;code&gt; as a temporary storage for the top value of the stack, add the top value of the stack with &lt;code&gt;bx&lt;&#x2F;code&gt; and store in 
+back to the top of the stack.&lt;&#x2F;p&gt;
+&lt;p&gt;With these macros in place, passing the Fantasy ISA input to fasm already gives us a valid x64 program. The result of the macro expansion would look
+like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;asm&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-asm &quot;&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_co_start:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;push &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;WORD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0x01
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;loop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;push &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;WORD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0x01
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;pop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;WORD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;bx
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;add &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;WORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rsp&lt;&#x2F;span&gt;&lt;span&gt;], &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;bx
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;jmp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;target
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In very few lines we have an assembler for our fantasy VM to native x64 code! Now, currently this will loop forever and we don&#x27;t want that, this is where
+coroutines come and save the day.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;coroutines&quot;&gt;Coroutines&lt;&#x2F;h1&gt;
+&lt;p&gt;How do we make sure that the unit vm only executes N instructions before it suspends itself? A pretty lightweight solution that requires very little setup
+is to insert a check that we haven&#x27;t exceeded the number of operations every &lt;code&gt;K&lt;&#x2F;code&gt; ops and after every label (in the unit VM you can only jump to labels, 
+so we catch all loops, branches and sketchy stuff with this).&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;I know that this doesn&#x27;t ensure that the VMs execute exactly N operations, but I think it is a pretty good tradeoff between code size, execution
+overhead and constraining the number of ops. I&#x27;ll show one possible mitigation further down.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;So how do we implement these lightweight unit coroutines?&lt;&#x2F;p&gt;
+&lt;p&gt;First we need to save several things per coroutine:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;current stack pointer (&lt;code&gt;rsp&lt;&#x2F;code&gt;)&lt;&#x2F;li&gt;
+&lt;li&gt;current instruction pointer (&lt;code&gt;rip&lt;&#x2F;code&gt;)&lt;&#x2F;li&gt;
+&lt;li&gt;current &lt;code&gt;rax&lt;&#x2F;code&gt; where we save the amount of instructions executed&lt;&#x2F;li&gt;
+&lt;li&gt;current &lt;code&gt;rbx&lt;&#x2F;code&gt; that is used for some temporal values, this one is not strictly needed and there is a chance I remove it in the future&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Usually these things are saved in the stack with normal coroutines but we don&#x27;t want to taint the stack of the unit vms with unrelated data.
+First because that means their stack gets reduced for reasons unrelated to their code, second because they may be able to manipulate the stack
+to the point where they override the values, and then all hell breaks loose. &lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s start with a simple example where we have 10 units, so let&#x27;s allocate 40 (4 fields * 10 coroutines) 64-bit values and 800 bytes of 
+total stack (80 per coroutine).&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;asm&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-asm &quot;&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;&lt;span style=&quot;color:#999580;&quot;&gt;; co-routine data, 40 quad-word sized (8 bytes), zeroed buffer
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_co_data:	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;dq &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;40 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;dup &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;data_stack:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Allocate 400 word sized (2 bytes), zeroed buffer
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;dw &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;400 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;dup &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;end_data_stack:
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and initialize the data in them:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;asm&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-asm &quot;&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_start:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;         ; Main VM start
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;xor &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;                ; Initialize rax to 0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Set rdx to the end of the stack, we will use this to 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; assign stacks to each coroutine, we start from the end
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;mov &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rdx&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;end_data_stack     
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; rcx will be the moving pointer through the _co_data 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; structure as we save the data
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;mov &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_co_data           
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Loop over all 10 coroutines to...
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;init_co_loop:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Initialize the rsp
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;mov &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx&lt;&#x2F;span&gt;&lt;span&gt;], &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rdx
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Initialize the rip
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;mov &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;24&lt;&#x2F;span&gt;&lt;span&gt;], &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_co_start
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Move to the next structure in _co_data
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;add &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;32
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Move back to the next coroutine start of the stack
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Each coroutine in this example gets 80 bytes
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;sub &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rdx&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;80
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Loop stuff
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;cmp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;10
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;jl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;init_co_loop
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now let&#x27;s loop over the coroutines, when we &lt;code&gt;yield&lt;&#x2F;code&gt; to the first one we will wait until it &lt;code&gt;yield&lt;&#x2F;code&gt;s control back to the main loop, then it will
+continue on to the second, and so on. While you read the next code fragment, always keep in mind that all across the execution &lt;em&gt;&lt;code&gt;rcx&lt;&#x2F;code&gt; always points to the
+currently active coroutine data.&lt;&#x2F;em&gt; &lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;asm&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-asm &quot;&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;co_initialized:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; i = 0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;xor &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; we will start with the first co-routine
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;mov &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_co_data
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_loop:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; yield to the coroutine
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	YIELD
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; i += 1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;inc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; move onto the next coroutine
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;add &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;32
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Loop things
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;cmp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;10
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;jl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_loop
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;jmp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_exit
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now all the magic seems to happen in this &lt;code&gt;YIELD&lt;&#x2F;code&gt; macro, let&#x27;s take a look:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;asm&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-asm &quot;&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;macro YIELD reset_rax {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; local turns these labels into local labels, so multiple uses of
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; YIELD don&amp;#39;t create repeated labels.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	local next_inst&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;after_yield
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; swap rsp, by the stored value in rsp (this means we just saved
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; the value of the main program rsp to the co_data structure pointed
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; by rcx)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;xchg &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rsp&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; swap rax, same as above
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;xchg &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; swap rbx, same as above
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;xchg &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rbx&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;16&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; now we push onto the stack the instruction pointer for the coroutine
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; which will be used by the &amp;quot;ret&amp;quot; instruction further down
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;push &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;24&lt;&#x2F;span&gt;&lt;span&gt;]	
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; we call next_inst to get the instruction pointer of this coroutine.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; We don&amp;#39;t wanna return to the next &amp;quot;pop&amp;quot; so we will need to increment
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; this value so that a yield to this coroutine returns right after the
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; &amp;quot;ret&amp;quot;. The call will put this rip into the stack
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;call &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;next_inst
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;next_inst:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; move the just save rip into the rip of the _co_data[coroutine_id]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;pop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;24&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; increment it so a yield from the other coroutine continues from right
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; after the ret
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;add &lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;QWORD &lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rcx &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;24&lt;&#x2F;span&gt;&lt;span&gt;], &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;(after_yield &lt;&#x2F;span&gt;&lt;span&gt;- &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;next_inst)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; jump, using the value pushed 4 instructions above, into the coroutine
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;ret
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;after_yield:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;There are probably some better ways to implement this, but this is what I came up with. Each call into a coroutine saves the main coroutine state
+into the &lt;code&gt;_co_data&lt;&#x2F;code&gt; of the coroutine you &lt;code&gt;YIELD&lt;&#x2F;code&gt; into. Once &lt;code&gt;YIELD&lt;&#x2F;code&gt; is called from the other coroutine the same thing will happen, the values for 
+the main one will be restored and the execution will continue right after the &lt;code&gt;ret&lt;&#x2F;code&gt;. This works very well for our case of a main coroutine coordinating
+other coroutines.&lt;&#x2F;p&gt;
+&lt;p&gt;There is one last piece left, injecting some instructions to check if we&#x27;ve exhausted our instruction limit this tick. To do so I created this macro:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;asm&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-asm &quot;&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;macro CHECK_LIMITS {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	local no_yield
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; in this case the 15k instruction limit is hardcoded, it could
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; be passed as an argument to the macro as when you generate the
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; code, you can set a limit per unit depending on their virtual cpu
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;cmp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;15000		
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;jl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;no_yield
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; If we are above, YIELD
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	YIELD 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; Initialize rax to 0 to reset the counter, here is where the mitigation
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; that I talked about before could happen, here you could subtract by 15k
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; and you&amp;#39;d compensate going over the instruction limit last iteration
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; by having less instructions this loop. This is still not perfect but I
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; think it&amp;#39;s mostly fine. If people found a way to exploit this, I&amp;#39;d
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; be happy to let them.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;xor &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;rax
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;no_yield:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and we can modify the original program like so:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ASM&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-ASM &quot;&gt;&lt;code class=&quot;language-ASM&quot; data-lang=&quot;ASM&quot;&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;_co_start:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;PUSH &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0x01
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;loop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;	; On every loop start, check if we&amp;#39;ve exceeded the max
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	CHECK_LIMITS
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;PUSH &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;0x01
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;ADD
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;JMP loop
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;some-small-notes&quot;&gt;Some small notes&lt;&#x2F;h1&gt;
+&lt;p&gt;This coroutine implementation is very specific. For general purpose coroutines you&#x27;d have to save some more registers than &lt;code&gt;rip&lt;&#x2F;code&gt;, &lt;code&gt;rsp&lt;&#x2F;code&gt;, &lt;code&gt;rax&lt;&#x2F;code&gt; and &lt;code&gt;rbx&lt;&#x2F;code&gt;.
+This works in this case because I&#x27;ve assigned a very specific meaning to each register that works all across the implementation, this allows for a smaller
+and faster switching between coroutines than a general version.&lt;&#x2F;p&gt;
+&lt;p&gt;Another thing is that right now this is very static, but I think it&#x27;s fairly simple to see how to make it dynamic on the number of coroutines and having
+different starting labels for each coroutine.&lt;&#x2F;p&gt;
+&lt;p&gt;Right now with the implementation I&#x27;ve shown there is no stack security to simplify the idea, but of course the &lt;code&gt;PUSH&lt;&#x2F;code&gt; and &lt;code&gt;POP&lt;&#x2F;code&gt; instructions should have
+boundary checks.&lt;&#x2F;p&gt;
+&lt;p&gt;Another point is that the &lt;code&gt;inc rax&lt;&#x2F;code&gt; for every operation may add too much overhead, another option that I need to explore is adding an &lt;code&gt;add rax, &amp;lt;immediate&amp;gt;&lt;&#x2F;code&gt;
+right before any jump operation. I believe this should be enough to reduce the overhead and it should cover all cases but I need to investigate further.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;the-end&quot;&gt;The End&lt;&#x2F;h1&gt;
+&lt;p&gt;Hope this was informative and clear, if you have any question or you wanna talk, please let me know at &lt;code&gt;marce [at] dziban.net&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>An experimental Development Environment</title>
+        <published>2019-11-27T00:00:00+00:00</published>
+        <updated>2019-11-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.dziban.net/blog/first/"/>
+        <id>https://blog.dziban.net/blog/first/</id>
+        
+        <content type="html" xml:base="https://blog.dziban.net/blog/first/">&lt;p&gt;Development environments of today look not that different from the ones from 10 or 20 years ago.
+Sure, we have different tooling, different languages, we use a lot more tooling but the core remains
+mostly the same. Organizing code in text files, edit those files using a text editor, using those text 
+files as input for an interpreter or compiler, check the files into a source control system. Once you have
+something you like you commit it, and at some point generate a build and deploy it.&lt;&#x2F;p&gt;
+&lt;p&gt;There are of course differences between environments and what you can do in them, but these are mostly the
+same.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;a-survey-of-interactive-development&quot;&gt;A Survey of Interactive Development&lt;&#x2F;h2&gt;
+&lt;p&gt;At this point, for me there is no better development system than interactive programmming, perfectly exemplified
+by one of the Lisps, my lisp of choice is Common Lisp and everytime I refer to Lisp in this essay I&#x27;m refering to it
+but probably a lot of this applies to any other Lisp.&lt;&#x2F;p&gt;
+&lt;p&gt;The ability to continuously evolve the state and the code of the program while doing exploratory programming is
+THE superpower of Lisp in my opinion. I don&#x27;t know about you, but I cannot really plan very well in advance and I need to explore
+the problem space interactively to get a good hang on what the problem and the program is about.&lt;&#x2F;p&gt;
+&lt;p&gt;A lot of design of Common Lisp goes towards enabling this interactivity, CLOS the OOP library of Common Lisp allows you to redefine
+classes at runtime and it will update existing instances with the new slots (properties). You can add and remove methods at runtime.
+You can also code what updating the instances means if you want something more custom than what is the edefault.&lt;&#x2F;p&gt;
+&lt;p&gt;You can redefine functions at runtime, the condition system allows interactivity when dealing with errors. When something happens you
+can continue right where you left off.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;an-idea-for-an-alternative&quot;&gt;An idea for an alternative&lt;&#x2F;h2&gt;
+&lt;p&gt;Recently I was thinkin&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>
