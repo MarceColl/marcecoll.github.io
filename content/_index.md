@@ -8,7 +8,7 @@
 	- email: `marce [at] dziban.net`
 	- mastodon: [dziban@functional.cafe](https://functional.cafe/@dziban)
   - I'm trying to write more
-- essays
+- Selected [essays](./essays/)
   - [Explorative Programming](./essays/explorative-programming), about development environments and how we may be able to do better.
 - posts
   - [Small VMs & Coroutines](./posts/small-vms-and-coroutines)
