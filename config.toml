@@ -25,6 +25,7 @@ author = "Marce Coll"
 logo = "images/logo.png"
 header_nav = [
   { name = "~home", url = "/" },
+  { name = "(exp prog)", url = "/exploratory-programming" },
   { name = "*essays", url = "/essays/" },
   { name = "@posts", url = "/posts/" },
 ]

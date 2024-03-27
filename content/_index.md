@@ -10,6 +10,7 @@ title = "dziban"
 	- mastodon: [dziban@functional.cafe](https://functional.cafe/@dziban)
   - I'm trying to write more
   - you can get the latests posts with the [atom feed](./atom.xml)
+- the page about [exploratory programming](./exploratory-programming)
 - selected [essays](./essays/)
   - [Explorative Programming](./essays/explorative-programming), about development environments and how we may be able to do better.
 - selected posts
