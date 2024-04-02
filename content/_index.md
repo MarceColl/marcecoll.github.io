@@ -15,3 +15,4 @@ title = "dziban"
   - [Explorative Programming](./essays/explorative-programming), about development environments and how we may be able to do better.
 - selected posts
   - [Small VMs & Coroutines](./posts/small-vms-and-coroutines)
+  - [Delivering a LispWorks Application](./posts/delivering-a-lispworks-application)
