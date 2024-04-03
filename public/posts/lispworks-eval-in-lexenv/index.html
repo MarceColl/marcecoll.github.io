@@ -104,9 +104,9 @@
 
 <p>One of the things that surprised me when I learned Common Lisp was
 that <code>eval</code> happens in the <code>nil</code> lexical environment<sup class="footnote-reference"><a href="#1">1</a></sup>. This means
-that none of the lexical variables, functions or macros surrouding the
-eval are available to use in the evaled form.</p>
-<p>For example</p>
+that none of the lexical variables, functions or macros surrounding
+the eval are available within the evaluated form.</p>
+<p>Take this example:</p>
 <pre data-lang="lisp" style="background-color:#fefbec;color:#6e6b5e;" class="language-lisp "><code class="language-lisp" data-lang="lisp"><span>(</span><span style="color:#b854d4;">let </span><span>((x </span><span style="color:#b65611;">4</span><span>))
 </span><span>  (</span><span style="color:#1fad83;">eval</span><span> &#39;(+ x </span><span style="color:#b65611;">2</span><span>)))
 </span><span>  
@@ -131,10 +131,10 @@ computation WAS the point of Lisp. At that point I learned about the
 dynamic vs lexical environment and I started making sense of what I
 was seeing, but I was frustrated and it seemed that what I wanted to
 do was impossible.</p>
-<p>Now of course you could do it with a macro, but then you cannot pass
-it arbitrary functions at runtime, everything has to be predefined. </p>
-<p>Another option was available which was to declare x as special<sup class="footnote-reference"><a href="#2">2</a></sup>,
-but then you needed to keep some special variables around, and the
+<p>Indeed, you could do it with a macro, but then you cannot pass it
+arbitrary functions at runtime, everything has to be predefined.</p>
+<p>Another option was available which was to declare <code>x</code> as special<sup class="footnote-reference"><a href="#2">2</a></sup>,
+but then you needed to define some special variables, and the
 expressions could only use those. It would work but it was not ideal.</p>
 <p>At that point I stopped, frustrated, and learned other parts of the
 language. Recently I had a need for something similar again and so I

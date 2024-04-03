@@ -24,9 +24,9 @@
         
         <content type="html" xml:base="https://blog.dziban.net/posts/lispworks-eval-in-lexenv/">&lt;p&gt;One of the things that surprised me when I learned Common Lisp was
 that &lt;code&gt;eval&lt;&#x2F;code&gt; happens in the &lt;code&gt;nil&lt;&#x2F;code&gt; lexical environment&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. This means
-that none of the lexical variables, functions or macros surrouding the
-eval are available to use in the evaled form.&lt;&#x2F;p&gt;
-&lt;p&gt;For example&lt;&#x2F;p&gt;
+that none of the lexical variables, functions or macros surrounding
+the eval are available within the evaluated form.&lt;&#x2F;p&gt;
+&lt;p&gt;Take this example:&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span&gt;))
 &lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; &amp;#39;(+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;)))
 &lt;&#x2F;span&gt;&lt;span&gt;  
@@ -51,10 +51,10 @@ computation WAS the point of Lisp. At that point I learned about the
 dynamic vs lexical environment and I started making sense of what I
 was seeing, but I was frustrated and it seemed that what I wanted to
 do was impossible.&lt;&#x2F;p&gt;
-&lt;p&gt;Now of course you could do it with a macro, but then you cannot pass
-it arbitrary functions at runtime, everything has to be predefined. &lt;&#x2F;p&gt;
-&lt;p&gt;Another option was available which was to declare x as special&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;,
-but then you needed to keep some special variables around, and the
+&lt;p&gt;Indeed, you could do it with a macro, but then you cannot pass it
+arbitrary functions at runtime, everything has to be predefined.&lt;&#x2F;p&gt;
+&lt;p&gt;Another option was available which was to declare &lt;code&gt;x&lt;&#x2F;code&gt; as special&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;,
+but then you needed to define some special variables, and the
 expressions could only use those. It would work but it was not ideal.&lt;&#x2F;p&gt;
 &lt;p&gt;At that point I stopped, frustrated, and learned other parts of the
 language. Recently I had a need for something similar again and so I

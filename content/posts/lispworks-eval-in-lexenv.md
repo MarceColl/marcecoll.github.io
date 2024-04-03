@@ -6,10 +6,10 @@ author = "Marce Coll"
 
 One of the things that surprised me when I learned Common Lisp was
 that `eval` happens in the `nil` lexical environment[^1]. This means
-that none of the lexical variables, functions or macros surrouding the
-eval are available to use in the evaled form.
+that none of the lexical variables, functions or macros surrounding
+the eval are available within the evaluated form.
 
-For example
+Take this example:
 
 ```lisp
 (let ((x 4))
@@ -42,11 +42,11 @@ dynamic vs lexical environment and I started making sense of what I
 was seeing, but I was frustrated and it seemed that what I wanted to
 do was impossible.
 
-Now of course you could do it with a macro, but then you cannot pass
-it arbitrary functions at runtime, everything has to be predefined. 
+Indeed, you could do it with a macro, but then you cannot pass it
+arbitrary functions at runtime, everything has to be predefined.
 
-Another option was available which was to declare x as special[^2],
-but then you needed to keep some special variables around, and the
+Another option was available which was to declare `x` as special[^2],
+but then you needed to define some special variables, and the
 expressions could only use those. It would work but it was not ideal.
 
 At that point I stopped, frustrated, and learned other parts of the
