@@ -4,8 +4,218 @@
     <link rel="self" type="application/atom+xml" href="https://blog.dziban.net/atom.xml"/>
     <link rel="alternate" type="text/html" href="https://blog.dziban.net"/>
     <generator uri="https://www.getzola.org/">Zola</generator>
-    <updated>2024-04-02T00:00:00+00:00</updated>
+    <updated>2024-04-03T00:00:00+00:00</updated>
     <id>https://blog.dziban.net/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Eval using the lexical environment in LispWorks</title>
+        <published>2024-04-03T00:00:00+00:00</published>
+        <updated>2024-04-03T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.dziban.net/posts/lispworks-eval-in-lexenv/"/>
+        <id>https://blog.dziban.net/posts/lispworks-eval-in-lexenv/</id>
+        
+        <content type="html" xml:base="https://blog.dziban.net/posts/lispworks-eval-in-lexenv/">&lt;p&gt;One of the things that surprised me when I learned Common Lisp was
+that &lt;code&gt;eval&lt;&#x2F;code&gt; happens in the &lt;code&gt;nil&lt;&#x2F;code&gt; lexical environment&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. This means
+that none of the lexical variables, functions or macros surrouding the
+eval are available to use in the evaled form.&lt;&#x2F;p&gt;
+&lt;p&gt;For example&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; &amp;#39;(+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;)))
+&lt;&#x2F;span&gt;&lt;span&gt;  
+&lt;&#x2F;span&gt;&lt;span&gt;Error: The variable X is unbound.
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The reason why that surprised me is that one of the first things that
+I tried when I learned about lisp symbolic capabilities was to build a
+symbolic
+&lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Derivative&quot;&gt;differentiator&lt;&#x2F;a&gt;. You&#x27;d give
+it a function, it would symbolically compute the derivative using
+the chain rule and then evaluate it. I built a very basic one with
+only a couple of rules to test the idea and it seemed to work, the
+problem was when I wanted to evaluate the resulting form.&lt;&#x2F;p&gt;
+&lt;p&gt;What I attempted was something like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;defun &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;dx &lt;&#x2F;span&gt;&lt;span&gt;(func x)
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((derivative (differentiate func :over &amp;#39;x)))
+&lt;&#x2F;span&gt;&lt;span&gt;    (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; derivative)))
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you try this of course you&#x27;ll face the same issue we found above.
+&lt;code&gt;Error: The variable X is unbound&lt;&#x2F;code&gt;. I was confused, I thought symbolic
+computation WAS the point of Lisp. At that point I learned about the
+dynamic vs lexical environment and I started making sense of what I
+was seeing, but I was frustrated and it seemed that what I wanted to
+do was impossible.&lt;&#x2F;p&gt;
+&lt;p&gt;Now of course you could do it with a macro, but then you cannot pass
+it arbitrary functions at runtime, everything has to be predefined. &lt;&#x2F;p&gt;
+&lt;p&gt;Another option was available which was to declare x as special&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;,
+but then you needed to keep some special variables around, and the
+expressions could only use those. It would work but it was not ideal.&lt;&#x2F;p&gt;
+&lt;p&gt;At that point I stopped, frustrated, and learned other parts of the
+language. Recently I had a need for something similar again and so I
+set to find a solution now that I had some more Common Lisp experience
+under my belt.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;progv&quot;&gt;&lt;code&gt;PROGV&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;a href=&quot;http:&#x2F;&#x2F;clhs.lisp.se&#x2F;Body&#x2F;s_progv.htm&quot;&gt;&lt;code&gt;PROGV&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; is a Common Lisp
+special form that takes three or more arguments, a list of dynamic
+bindings to create, a list of values to set the bindings to and any
+number of forms. The forms are evaluated in order with the given 
+dynamic bindings set.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;defun &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;test-fun &lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;  (+ *&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;x&lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;(progv &amp;#39;(*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d73737;&quot;&gt;x&lt;&#x2F;span&gt;&lt;span&gt;*) &amp;#39;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;  (test-fun))
+&lt;&#x2F;span&gt;&lt;span&gt;  
+&lt;&#x2F;span&gt;&lt;span&gt;=&amp;gt; 5
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;With this we can emulate a en eval in a lexical env by setting
+everything we have in the lexical environment as a dynamic variable
+inside a &lt;code&gt;PROGV&lt;&#x2F;code&gt; and then executing the eval. It will behave as if
+it was running on the lexenv.&lt;&#x2F;p&gt;
+&lt;p&gt;This would be a good moment to see where we are going:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt;-in-lexenv (+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;)))
+&lt;&#x2F;span&gt;&lt;span&gt;  
+&lt;&#x2F;span&gt;&lt;span&gt;=&amp;gt; 6
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Which behind the scenes would be transformed into a &lt;code&gt;PROGV&lt;&#x2F;code&gt; form:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(progv &amp;#39;(x) &amp;#39;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; &amp;#39;(+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;)))
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now the problem is, &lt;code&gt;eval-in-lexenv&lt;&#x2F;code&gt; cannot modify its surroundings,
+macros are powerful but not &lt;em&gt;THAT&lt;&#x2F;em&gt; powerful&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. We could ask the
+users to do something like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span&gt;)) (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; &amp;#39;(+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;))))
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And then build a code walker, check bindings inside, capture some
+bindings from outside, etc. But that is very complicated and there are
+probably plenty of edge cases and problems, it&#x27;s far too complicated
+and too alien for the user to be worth it in this case.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;introspecting-the-lexical-environment&quot;&gt;Introspecting the lexical environment&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;code&gt;DEFMACRO&lt;&#x2F;code&gt;&#x27;s arglist has a hidden gem that I overlooked the first time
+I checked the documentation. With &lt;code&gt;&amp;amp;environment&lt;&#x2F;code&gt; we can ask the lisp
+compiler to give us the lexical environment&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#4&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; at the macro call site.&lt;&#x2F;p&gt;
+&lt;p&gt;For example&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;defmacro &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;capture-env &lt;&#x2F;span&gt;&lt;span&gt;(&amp;amp;environment env)
+&lt;&#x2F;span&gt;&lt;span&gt;  env)
+&lt;&#x2F;span&gt;&lt;span&gt;  
+&lt;&#x2F;span&gt;&lt;span&gt;(flet ((plus (a b) (+ a b)))
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;    (capture-env)))
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;=&amp;gt; #&amp;lt;Environment 
+&lt;&#x2F;span&gt;&lt;span&gt;       venv (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;#&amp;lt;Venv 275146972128&lt;&#x2F;span&gt;&lt;span&gt;  X&amp;gt;)  
+&lt;&#x2F;span&gt;&lt;span&gt;	   fenv ((PLUS . &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;#&amp;lt;COMPILER::FLET-INFO #&amp;lt;interpreted&lt;&#x2F;span&gt;&lt;span&gt; function (SUBFUNCTION (FLET PLUS) :UNKNOWN) 40200038FC&amp;gt;&amp;gt;)) 
+&lt;&#x2F;span&gt;&lt;span&gt;	   benv NIL 
+&lt;&#x2F;span&gt;&lt;span&gt;	   tenv NIL&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It contains variables, functions, blocks and tags in the lexical
+environment. But, I&#x27;m pretty sure this struct is internal and the
+intrface may not be stable. Re-reading the LispWorks documentation
+today I found this function:
+&lt;a href=&quot;https:&#x2F;&#x2F;www.lispworks.com&#x2F;documentation&#x2F;lw80&#x2F;lw&#x2F;lw-sys-93.htm&quot;&gt;&lt;code&gt;SYSTEM:MAP-ENVIRONMENT&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;.
+With this function you can introspect everything in the lexical
+environment you pass as an argument. Let&#x27;s write a function to get all
+variable names in the lexical environment for example.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;defun &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;lexical-vars &lt;&#x2F;span&gt;&lt;span&gt;(env)
+&lt;&#x2F;span&gt;&lt;span&gt;  &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#60ac39;&quot;&gt;Given an environment object, return all lexical vars&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((vars &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;nil&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;    (system:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;map&lt;&#x2F;span&gt;&lt;span&gt;-environment env
+&lt;&#x2F;span&gt;&lt;span&gt;     :variable
+&lt;&#x2F;span&gt;&lt;span&gt;     (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;lambda &lt;&#x2F;span&gt;&lt;span&gt;(name kind info)
+&lt;&#x2F;span&gt;&lt;span&gt;       (declare (ignore info))
+&lt;&#x2F;span&gt;&lt;span&gt;       (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;when &lt;&#x2F;span&gt;&lt;span&gt;(eq kind :lexical)
+&lt;&#x2F;span&gt;&lt;span&gt;         (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;pushnew&lt;&#x2F;span&gt;&lt;span&gt; name vars))))
+&lt;&#x2F;span&gt;&lt;span&gt;    vars))
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Pretty self-explanatory, ask lispworks to map over all the variables,
+and then we push them into a list. We filter them by &lt;code&gt;:LEXICAL&lt;&#x2F;code&gt; type
+because we are also given dynamic variables that have been overwritten
+in the current lexical scope, but we don&#x27;t need to use those since
+they are already in the dynamic scope.&lt;&#x2F;p&gt;
+&lt;p&gt;Now let&#x27;s create the &lt;em&gt;pièce de résistance&lt;&#x2F;em&gt;, the &lt;code&gt;eval-in-lexenv&lt;&#x2F;code&gt;
+macro:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;defmacro &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;eval-in-lexenv &lt;&#x2F;span&gt;&lt;span&gt;(&amp;amp;body body &amp;amp;environment env)
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((lenv-vars (lexical-vars env)))
+&lt;&#x2F;span&gt;&lt;span&gt;     `(progv &amp;#39;,lenv-vars (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;list&lt;&#x2F;span&gt;&lt;span&gt; ,@lenv-vars)
+&lt;&#x2F;span&gt;&lt;span&gt;	    (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; ,(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;car&lt;&#x2F;span&gt;&lt;span&gt; body)))))
+&lt;&#x2F;span&gt;&lt;span&gt;		
+&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt;-in-lexenv (+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;)))
+&lt;&#x2F;span&gt;&lt;span&gt;  
+&lt;&#x2F;span&gt;&lt;span&gt;=&amp;gt; 4
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Short and sweet, we get all the lexical variables, then we pass them
+both as names and values to &lt;code&gt;PROGV&lt;&#x2F;code&gt;. As names we pass them quoted, so
+we get bind the same symbols we have of lexical vars as dynamic
+variables, for values we pass them unquoted inside of a &lt;code&gt;(LIST ...)&lt;&#x2F;code&gt;
+so they get evaluated and capture the values from the surrounding
+lexical env, thus setting the dynamic variables to the same values.&lt;&#x2F;p&gt;
+&lt;p&gt;There you go, a way to eval in the lexical environment in about 14
+lines of easy to understand common lisp code. This code is LispWorks
+exclusive tho, but I&#x27;m sure there are ways to do it in SBCL, since
+&lt;code&gt;&amp;amp;environment&lt;&#x2F;code&gt; works there as well. I may add it in the future if
+someone sends me a solution that works in SBCL.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;limitations&quot;&gt;Limitations&lt;&#x2F;h2&gt;
+&lt;p&gt;This implementation doesn&#x27;t allow using functions and macros from the
+lexical env (as defined by &lt;code&gt;MACROLET&lt;&#x2F;code&gt; or &lt;code&gt;FLET&lt;&#x2F;code&gt;) although there are
+ways around it, like binding the function to a variable and using
+&lt;code&gt;FUNCALL&lt;&#x2F;code&gt; or &lt;code&gt;APPLY&lt;&#x2F;code&gt; inside the eval.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((fn (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;lambda &lt;&#x2F;span&gt;&lt;span&gt;(a b) (+ a b))))
+&lt;&#x2F;span&gt;&lt;span&gt;   (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt;-in-lexenv (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;funcall&lt;&#x2F;span&gt;&lt;span&gt; fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;3 4&lt;&#x2F;span&gt;&lt;span&gt;)))
+&lt;&#x2F;span&gt;&lt;span&gt;   
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;; =&amp;gt; 7
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Another thing is that this macro depends on being called at the
+lexical environment you want to evaluate it.&lt;&#x2F;p&gt;
+&lt;p&gt;If you try to call this macro from within the body of a macro function
+you&#x27;ll be capturing the call environment inside the macro. Of course
+if you use it as part of the unevaluated returned form of the macro
+everything will work as expected, since that will be evaluated in the
+correct lexical environment.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;setf-shenanigans&quot;&gt;&lt;code&gt;SETF&lt;&#x2F;code&gt; shenanigans&lt;&#x2F;h2&gt;
+&lt;p&gt;There is a question I have for readers, because there is a bit of a
+puzzling behaviour I&#x27;ve seen with this implementation in LispWorks.&lt;&#x2F;p&gt;
+&lt;p&gt;When using &lt;code&gt;eval-in-lexenv&lt;&#x2F;code&gt;, if inside the evaled expression you
+&lt;code&gt;setf&lt;&#x2F;code&gt; one of the lexical environment variables, that setf escapes to
+the actual lexical environment instead of being contained to the
+&lt;code&gt;PROGV&lt;&#x2F;code&gt;. Does anyone know why that is the case? Can someone try it in
+another implementation?&lt;&#x2F;p&gt;
+&lt;p&gt;Example:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt;-in-lexenv (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;setf&lt;&#x2F;span&gt;&lt;span&gt; x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;  (+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;  
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;; =&amp;gt; 10
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is very confusing to me, because it&#x27;s something that I wanted and
+I was checking how to implement it, but it seems at least in LispWorks
+it works by default but I&#x27;m not sure why it works, since in there you
+should be setting the dynamic variable inside the &lt;code&gt;PROGV&lt;&#x2F;code&gt; and not the
+lexical variable (since you don&#x27;t even have access to the lexical one
+anyway).&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;The End&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;The nil lexical environment, as the name says has no bindings at all&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;Special and dynamic variables are the same thing, special variables are variables bound in the dynamic environment&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;3&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;Recently I learned about a &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;abuseofnotation&#x2F;termlisp&quot;&gt;term rewriting lisp&lt;&#x2F;a&gt;, which could actually do things like this potentially. I think that particular version is not quite powerful enough for this, but there is no reason it couldn&#x27;t I think.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;4&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;4&lt;&#x2F;sup&gt;
+&lt;p&gt;I think it&#x27;s not only the lexical environment, but the general environment that overlays the dynamic environment, it also contains special variables overriden in the current lexical environment for example.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+        
+    </entry>
     <entry xml:lang="en">
         <title>Delivering a LispWorks application</title>
         <published>2024-04-02T00:00:00+00:00</published>

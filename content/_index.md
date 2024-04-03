@@ -16,3 +16,4 @@ title = "dziban"
 - selected posts
   - [Small VMs & Coroutines](./posts/small-vms-and-coroutines)
   - [Delivering a LispWorks Application](./posts/delivering-a-lispworks-application)
+  - [Eval using the lexical environment in Common Lisp](./posts/lispworks-eval-in-lexenv)
