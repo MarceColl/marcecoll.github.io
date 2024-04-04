@@ -144,7 +144,7 @@ macro:&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;defmacro &lt;&#x2F;span&gt;&lt;span style=&quot;color:#6684e1;&quot;&gt;eval-in-lexenv &lt;&#x2F;span&gt;&lt;span&gt;(&amp;amp;body body &amp;amp;environment env)
 &lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((lenv-vars (lexical-vars env)))
 &lt;&#x2F;span&gt;&lt;span&gt;     `(progv &amp;#39;,lenv-vars (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;list&lt;&#x2F;span&gt;&lt;span&gt; ,@lenv-vars)
-&lt;&#x2F;span&gt;&lt;span&gt;	    (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; ,(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;car&lt;&#x2F;span&gt;&lt;span&gt; body)))))
+&lt;&#x2F;span&gt;&lt;span&gt;	    (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt; &amp;#39;,(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;car&lt;&#x2F;span&gt;&lt;span&gt; body)))))
 &lt;&#x2F;span&gt;&lt;span&gt;		
 &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;))
 &lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt;-in-lexenv (+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;)))
@@ -179,27 +179,6 @@ you&#x27;ll be capturing the call environment inside the macro. Of course
 if you use it as part of the unevaluated returned form of the macro
 everything will work as expected, since that will be evaluated in the
 correct lexical environment.&lt;&#x2F;p&gt;
-&lt;h2 id=&quot;setf-shenanigans&quot;&gt;&lt;code&gt;SETF&lt;&#x2F;code&gt; shenanigans&lt;&#x2F;h2&gt;
-&lt;p&gt;There is a question I have for readers, because there is a bit of a
-puzzling behaviour I&#x27;ve seen with this implementation in LispWorks.&lt;&#x2F;p&gt;
-&lt;p&gt;When using &lt;code&gt;eval-in-lexenv&lt;&#x2F;code&gt;, if inside the evaled expression you
-&lt;code&gt;setf&lt;&#x2F;code&gt; one of the lexical environment variables, that setf escapes to
-the actual lexical environment instead of being contained to the
-&lt;code&gt;PROGV&lt;&#x2F;code&gt;. Does anyone know why that is the case? Can someone try it in
-another implementation?&lt;&#x2F;p&gt;
-&lt;p&gt;Example:&lt;&#x2F;p&gt;
-&lt;pre data-lang=&quot;lisp&quot; style=&quot;background-color:#fefbec;color:#6e6b5e;&quot; class=&quot;language-lisp &quot;&gt;&lt;code class=&quot;language-lisp&quot; data-lang=&quot;lisp&quot;&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b854d4;&quot;&gt;let &lt;&#x2F;span&gt;&lt;span&gt;((x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;))
-&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;eval&lt;&#x2F;span&gt;&lt;span&gt;-in-lexenv (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#1fad83;&quot;&gt;setf&lt;&#x2F;span&gt;&lt;span&gt; x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span&gt;))
-&lt;&#x2F;span&gt;&lt;span&gt;  (+ x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b65611;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;))
-&lt;&#x2F;span&gt;&lt;span&gt;  
-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#999580;&quot;&gt;; =&amp;gt; 10
-&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;This is very confusing to me, because it&#x27;s something that I wanted and
-I was checking how to implement it, but it seems at least in LispWorks
-it works by default but I&#x27;m not sure why it works, since in there you
-should be setting the dynamic variable inside the &lt;code&gt;PROGV&lt;&#x2F;code&gt; and not the
-lexical variable (since you don&#x27;t even have access to the lexical one
-anyway).&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;em&gt;The End&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
 &lt;p&gt;The nil lexical environment, as the name says has no bindings at all&lt;&#x2F;p&gt;

@@ -164,7 +164,7 @@ macro:
 (defmacro eval-in-lexenv (&body body &environment env)
   (let ((lenv-vars (lexical-vars env)))
      `(progv ',lenv-vars (list ,@lenv-vars)
-	    (eval ,(car body)))))
+	    (eval ',(car body)))))
 		
 (let ((x 2))
   (eval-in-lexenv (+ x 2)))
@@ -208,35 +208,6 @@ you'll be capturing the call environment inside the macro. Of course
 if you use it as part of the unevaluated returned form of the macro
 everything will work as expected, since that will be evaluated in the
 correct lexical environment.
-
-## `SETF` shenanigans
-
-There is a question I have for readers, because there is a bit of a
-puzzling behaviour I've seen with this implementation in LispWorks.
-
-When using `eval-in-lexenv`, if inside the evaled expression you
-`setf` one of the lexical environment variables, that setf escapes to
-the actual lexical environment instead of being contained to the
-`PROGV`. Does anyone know why that is the case? Can someone try it in
-another implementation?
-
-Example:
-
-```lisp
-(let ((x 2))
-  (eval-in-lexenv (setf x 8))
-  (+ x 2))
-  
-; => 10
-```
-
-This is very confusing to me, because it's something that I wanted and
-I was checking how to implement it, but it seems at least in LispWorks
-it works by default but I'm not sure why it works, since in there you
-should be setting the dynamic variable inside the `PROGV` and not the
-lexical variable (since you don't even have access to the lexical one
-anyway).
-
 
 *The End*
 

@@ -224,7 +224,7 @@ macro:</p>
 <pre data-lang="lisp" style="background-color:#fefbec;color:#6e6b5e;" class="language-lisp "><code class="language-lisp" data-lang="lisp"><span>(</span><span style="color:#b854d4;">defmacro </span><span style="color:#6684e1;">eval-in-lexenv </span><span>(&amp;body body &amp;environment env)
 </span><span>  (</span><span style="color:#b854d4;">let </span><span>((lenv-vars (lexical-vars env)))
 </span><span>     `(progv &#39;,lenv-vars (</span><span style="color:#1fad83;">list</span><span> ,@lenv-vars)
-</span><span>	    (</span><span style="color:#1fad83;">eval</span><span> ,(</span><span style="color:#1fad83;">car</span><span> body)))))
+</span><span>	    (</span><span style="color:#1fad83;">eval</span><span> &#39;,(</span><span style="color:#1fad83;">car</span><span> body)))))
 </span><span>		
 </span><span>(</span><span style="color:#b854d4;">let </span><span>((x </span><span style="color:#b65611;">2</span><span>))
 </span><span>  (</span><span style="color:#1fad83;">eval</span><span>-in-lexenv (+ x </span><span style="color:#b65611;">2</span><span>)))
@@ -259,27 +259,6 @@ you'll be capturing the call environment inside the macro. Of course
 if you use it as part of the unevaluated returned form of the macro
 everything will work as expected, since that will be evaluated in the
 correct lexical environment.</p>
-<h2 id="setf-shenanigans"><code>SETF</code> shenanigans</h2>
-<p>There is a question I have for readers, because there is a bit of a
-puzzling behaviour I've seen with this implementation in LispWorks.</p>
-<p>When using <code>eval-in-lexenv</code>, if inside the evaled expression you
-<code>setf</code> one of the lexical environment variables, that setf escapes to
-the actual lexical environment instead of being contained to the
-<code>PROGV</code>. Does anyone know why that is the case? Can someone try it in
-another implementation?</p>
-<p>Example:</p>
-<pre data-lang="lisp" style="background-color:#fefbec;color:#6e6b5e;" class="language-lisp "><code class="language-lisp" data-lang="lisp"><span>(</span><span style="color:#b854d4;">let </span><span>((x </span><span style="color:#b65611;">2</span><span>))
-</span><span>  (</span><span style="color:#1fad83;">eval</span><span>-in-lexenv (</span><span style="color:#1fad83;">setf</span><span> x </span><span style="color:#b65611;">8</span><span>))
-</span><span>  (+ x </span><span style="color:#b65611;">2</span><span>))
-</span><span>  
-</span><span style="color:#999580;">; =&gt; 10
-</span></code></pre>
-<p>This is very confusing to me, because it's something that I wanted and
-I was checking how to implement it, but it seems at least in LispWorks
-it works by default but I'm not sure why it works, since in there you
-should be setting the dynamic variable inside the <code>PROGV</code> and not the
-lexical variable (since you don't even have access to the lexical one
-anyway).</p>
 <p><em>The End</em></p>
 <div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
 <p>The nil lexical environment, as the name says has no bindings at all</p>
